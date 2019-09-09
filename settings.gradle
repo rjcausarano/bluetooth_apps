@@ -1,0 +1,2 @@
+include ':remote_control', ':multiple_devices'
+rootProject.name='Bluetooth Remote'
