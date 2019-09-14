@@ -14,9 +14,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 class MainActivity : AppCompatActivity() {
     val REQUEST_ENABLE_BT = 980
     var bluetoothAdapter : BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-    val adapter = BondedDevicesAdapter(ArrayList())
-    val onDeviceFoundCallback = object : OnDeviceFoundCallback{
-        override fun execute(btDevice: BluetoothDevice) {
+    val adapter = BondedDevicesAdapter(ArrayList(), bluetoothAdapter)
+    val onDeviceFoundCallback = object : BtConnectionCallback{
+        override fun onConnectionSuccessful() {
+        }
+
+        override fun onDeviceFound(btDevice: BluetoothDevice) {
             adapter.add(btDevice)
         }
     }
@@ -31,7 +34,8 @@ class MainActivity : AppCompatActivity() {
         bluetooth_bonded_devices.layoutManager = LinearLayoutManager(this)
 
         bluetooth_connect_button.setOnClickListener {
-            connect()
+            enable()
+            getDevices()
         }
 
         bluetooth_scan_button.setOnClickListener {
@@ -41,7 +45,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if(requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_OK) {
-            connect()
+            enable()
             return
         }
         super.onActivityResult(requestCode, resultCode, data)
@@ -52,14 +56,13 @@ class MainActivity : AppCompatActivity() {
         unregisterReceiver(btBroadcastReceiver)
     }
 
-    private fun connect(){
+    private fun enable(){
         if (bluetoothAdapter == null)
             throw Exception("Doesn't support bluetooth")
         if (!bluetoothAdapter.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
         }
-        getDevices()
     }
 
     private fun getDevices(){
