@@ -8,13 +8,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.IntentFilter
+import android.os.Handler
 import androidx.recyclerview.widget.LinearLayoutManager
 
 
 class MainActivity : AppCompatActivity() {
-    val REQUEST_ENABLE_BT = 980
-    var bluetoothAdapter : BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-    val adapter = BondedDevicesAdapter(ArrayList(), bluetoothAdapter)
+    val handler = Handler()
+    val btServices = BtServices(handler, this)
+    val adapter = BondedDevicesAdapter(ArrayList(), btServices)
     val onDeviceFoundCallback = object : BtConnectionCallback{
         override fun onConnectionSuccessful() {
         }
@@ -34,18 +35,18 @@ class MainActivity : AppCompatActivity() {
         bluetooth_bonded_devices.layoutManager = LinearLayoutManager(this)
 
         bluetooth_connect_button.setOnClickListener {
-            enable()
+            btServices.enable()
             getDevices()
         }
 
         bluetooth_scan_button.setOnClickListener {
-            scanDevices()
+            btServices.scanDevices()
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if(requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_OK) {
-            enable()
+        if(requestCode == BtServices.REQUEST_ENABLE_BT && resultCode == Activity.RESULT_OK) {
+            btServices.enable()
             return
         }
         super.onActivityResult(requestCode, resultCode, data)
@@ -56,22 +57,8 @@ class MainActivity : AppCompatActivity() {
         unregisterReceiver(btBroadcastReceiver)
     }
 
-    private fun enable(){
-        if (bluetoothAdapter == null)
-            throw Exception("Doesn't support bluetooth")
-        if (!bluetoothAdapter.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
-        }
-    }
-
     private fun getDevices(){
-        val devicesList = ArrayList<BluetoothDevice>(bluetoothAdapter.bondedDevices)
-        adapter.add(devicesList)
-    }
-
-    private fun scanDevices(){
-        bluetoothAdapter.startDiscovery()
+        adapter.getDevices()
     }
 
     private fun configureReceiver(){

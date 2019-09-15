@@ -8,7 +8,7 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.bluetooth_device_name.view.*
 
-class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btAdapter: BluetoothAdapter) : RecyclerView.Adapter<BtViewHolder>(){
+class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btServices: BtServices) : RecyclerView.Adapter<BtViewHolder>(){
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BtViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.bluetooth_device_name, parent, false) as LinearLayout
 
@@ -26,8 +26,13 @@ class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btAda
         holder.view.bt_device_name.text = deviceName
         holder.view.bt_device_mac.text = deviceMac
         holder.view.setOnClickListener {
-            btAdapter.conn
+            btServices.connect(device)
         }
+    }
+
+    fun getDevices(){
+        val devicesList = ArrayList<BluetoothDevice>(btServices.getBluetoothAdapter().bondedDevices)
+        add(devicesList)
     }
 
     fun add(device: BluetoothDevice){
@@ -35,7 +40,8 @@ class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btAda
         notifyItemInserted(btDevices.size - 1)
     }
 
-    fun add(devices : List<BluetoothDevice>){
+    private fun add(devices : List<BluetoothDevice>){
+        btDevices.clear()
         btDevices.addAll(devices)
         notifyDataSetChanged()
     }
