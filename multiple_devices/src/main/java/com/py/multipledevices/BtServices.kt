@@ -9,14 +9,14 @@ import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import android.os.Handler
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.*
 
 class BtServices(val btHandler : Handler, val activity: Activity){

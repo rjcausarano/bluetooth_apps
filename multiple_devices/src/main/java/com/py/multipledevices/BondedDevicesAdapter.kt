@@ -1,6 +1,5 @@
 package com.py.multipledevices
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.view.LayoutInflater
 import android.view.View

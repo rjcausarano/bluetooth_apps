@@ -1,18 +1,16 @@
 package com.py.multipledevices
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import kotlinx.android.synthetic.main.activity_main.*
 import android.content.IntentFilter
-import android.os.Handler
-import android.os.Message
+import android.os.*
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -44,11 +42,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
     val btBroadcastReceiver = BtBroadcastReceiver(adapter, btCallbacks)
+    var vibrator : Vibrator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         configureReceiver()
         bluetooth_bonded_devices.adapter = adapter
         bluetooth_bonded_devices.layoutManager = LinearLayoutManager(this)
@@ -113,6 +112,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showToast(msg:String){
+        vibrator?.vibrate(400)
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }
