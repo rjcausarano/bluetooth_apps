@@ -1,5 +1,6 @@
 package com.py.multipledevices
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -9,22 +10,25 @@ import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.IntentFilter
 import android.os.Handler
+import android.os.Message
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 
 
 class MainActivity : AppCompatActivity() {
-    val handler = Handler()
-    val btServices = BtServices(handler, this)
-    val adapter = BondedDevicesAdapter(ArrayList(), btServices)
-    val onDeviceFoundCallback = object : BtConnectionCallback{
-        override fun onConnectionSuccessful() {
-        }
-
-        override fun onDeviceFound(btDevice: BluetoothDevice) {
-            adapter.add(btDevice)
+    val handler = object:Handler(){
+        override fun handleMessage(msg: Message) {
+            when(msg.what){
+                Constants.MESSAGE_READ -> {
+                    val txt = String(msg.obj as ByteArray, 0, msg.arg1)
+                    showToast(txt)
+                }
+            }
         }
     }
-    val btBroadcastReceiver = BtBroadcastReceiver(onDeviceFoundCallback)
+    val btServices = BtServices(handler, this)
+    val adapter = BondedDevicesAdapter(ArrayList(), btServices)
+    val btBroadcastReceiver = BtBroadcastReceiver(adapter)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,22 +38,36 @@ class MainActivity : AppCompatActivity() {
         bluetooth_bonded_devices.adapter = adapter
         bluetooth_bonded_devices.layoutManager = LinearLayoutManager(this)
 
-        bluetooth_connect_button.setOnClickListener {
+        bluetooth_enable_button.setOnClickListener {
             btServices.enable()
-            getDevices()
+            enableDiscovery()
+            btServices.acceptConnections()
         }
 
         bluetooth_scan_button.setOnClickListener {
             btServices.scanDevices()
+            getDevices()
+        }
+
+        send_text.setOnClickListener {
+            btServices.write(message_tv.text.toString())
+            message_tv.text.clear()
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if(requestCode == BtServices.REQUEST_ENABLE_BT && resultCode == Activity.RESULT_OK) {
-            btServices.enable()
-            return
+        when(requestCode){
+            BtServices.REQUEST_ENABLE_BT -> {
+                if(resultCode == Activity.RESULT_OK){
+                    showToast("Bluetooth Enabled!")
+                }
+            }
+            BtServices.REQUEST_LOCATION_PERMISSION -> {
+                if(resultCode == Activity.RESULT_OK)
+                    btServices.scanDevices()
+            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
         }
-        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onDestroy() {
@@ -74,5 +92,9 @@ class MainActivity : AppCompatActivity() {
             putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
         }
         startActivity(discoverableIntent)
+    }
+
+    private fun showToast(msg:String){
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }

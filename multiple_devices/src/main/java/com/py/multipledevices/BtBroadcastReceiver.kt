@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 
-class BtBroadcastReceiver(val btConnectionCallback: BtConnectionCallback) : BroadcastReceiver(){
+class BtBroadcastReceiver(val btAdapter: BondedDevicesAdapter) : BroadcastReceiver(){
     companion object{
         val TAG = BtBroadcastReceiver::class.simpleName
     }
@@ -29,10 +29,7 @@ class BtBroadcastReceiver(val btConnectionCallback: BtConnectionCallback) : Broa
             BluetoothDevice.ACTION_FOUND -> {
                 val device: BluetoothDevice =
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                btConnectionCallback.onDeviceFound(device)
-                //TODO remove these comments
-                //val deviceName = device.name
-                //val deviceHardwareAddress = device.address
+                btAdapter.add(device)
             }
         }
     }

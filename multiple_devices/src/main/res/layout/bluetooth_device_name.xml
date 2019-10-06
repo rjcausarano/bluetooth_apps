@@ -11,6 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:hint="@string/bluetooth_device_name"
+        android:layout_margin="25dp"
         />
 
     <TextView
@@ -18,5 +19,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:hint="@string/bluetooth_device_mac"
+        android:visibility="gone"
         />
 </LinearLayout>
