@@ -63,6 +63,11 @@ class BtServices(val btHandler : Handler, val activity: Activity){
         }
     }
 
+    fun pair(device: BluetoothDevice){
+        if(device.bondState != BluetoothDevice.BOND_BONDED)
+            device.createBond()
+    }
+
     fun enable(){
         if (bluetoothAdapter == null)
             throw Exception("Doesn't support bluetooth")
@@ -146,7 +151,6 @@ class BtServices(val btHandler : Handler, val activity: Activity){
         private val mmBuffer: ByteArray = ByteArray(1024)
 
         override fun run() {
-            showToast("Connected!!")
             var numBytes: Int // bytes returned from read()
             // Keep listening to the InputStream until an exception occurs.
             while (true) {

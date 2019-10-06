@@ -3,6 +3,7 @@ package com.py.multipledevices
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -22,9 +23,13 @@ class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btSer
     override fun onBindViewHolder(holder: BtViewHolder, position: Int) {
         val device = btDevices.get(position)
         val deviceName = device.name
-        val deviceMac = device.address
         holder.view.bt_device_name.text = deviceName
-        holder.view.bt_device_mac.text = deviceMac
+        if(device.bondState != BluetoothDevice.BOND_BONDED) {
+            holder.view.bt_device_pair.visibility = View.VISIBLE
+            holder.view.bt_device_pair.setOnClickListener {
+                btServices.pair(device)
+            }
+        }
         holder.view.setOnClickListener {
             btServices.connect(device)
         }

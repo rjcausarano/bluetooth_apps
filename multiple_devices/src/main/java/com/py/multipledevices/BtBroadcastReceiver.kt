@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 
-class BtBroadcastReceiver(val btAdapter: BondedDevicesAdapter) : BroadcastReceiver(){
+class BtBroadcastReceiver(val btAdapter: BondedDevicesAdapter? = null, val btCallbacks: BtCallbacks? = null) : BroadcastReceiver(){
     companion object{
         val TAG = BtBroadcastReceiver::class.simpleName
     }
@@ -27,9 +27,31 @@ class BtBroadcastReceiver(val btAdapter: BondedDevicesAdapter) : BroadcastReceiv
                 }
             }
             BluetoothDevice.ACTION_FOUND -> {
-                val device: BluetoothDevice =
+                if(btAdapter == null)
+                    return
+                val device: BluetoothDevice? =
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                btAdapter.add(device)
+                btAdapter.add(device!!)
+            }
+            BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                if(btCallbacks == null)
+                    return
+                btCallbacks.onConnectStateChanged(true)
+            }
+            BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
+                if(btCallbacks == null)
+                    return
+                btCallbacks.onConnectStateChanged(false)
+            }
+            BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                if(btCallbacks == null)
+                    return
+                val bondState : Int = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
+                btAdapter?.notifyDataSetChanged()
+                when(bondState){
+                    BluetoothDevice.BOND_BONDED -> btCallbacks.onPairedStateChanged(true)
+                    BluetoothDevice.BOND_NONE -> btCallbacks.onPairedStateChanged(false)
+                }
             }
         }
     }

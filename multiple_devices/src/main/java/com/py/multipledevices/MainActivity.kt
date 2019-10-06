@@ -28,7 +28,22 @@ class MainActivity : AppCompatActivity() {
     }
     val btServices = BtServices(handler, this)
     val adapter = BondedDevicesAdapter(ArrayList(), btServices)
-    val btBroadcastReceiver = BtBroadcastReceiver(adapter)
+    val btCallbacks = object: BtCallbacks{
+        override fun onConnectStateChanged(connected: Boolean) {
+            if(connected)
+                showToast("Bluetooth connected!!")
+            else
+                showToast("Bluetooth disconnected..")
+        }
+
+        override fun onPairedStateChanged(paired: Boolean) {
+            if(paired)
+                showToast("Bluetooth paired!!")
+            else
+                showToast("Bluetooth not paired..")
+        }
+    }
+    val btBroadcastReceiver = BtBroadcastReceiver(adapter, btCallbacks)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,6 +98,9 @@ class MainActivity : AppCompatActivity() {
         val filter = IntentFilter()
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
         filter.addAction(BluetoothDevice.ACTION_FOUND)
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         registerReceiver(btBroadcastReceiver, filter)
     }
 
