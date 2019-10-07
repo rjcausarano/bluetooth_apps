@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -19,7 +21,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
 
-class BtServices(val btHandler : Handler, val activity: Activity){
+class BtServices(val btHandler : Handler, val activity: Activity, val btCallbacks: BtCallbacks? = null) : BroadcastReceiver(){
     companion object{
         private val TAG = BtServices::class.simpleName
         val REQUEST_ENABLE_BT = 980
@@ -30,6 +32,7 @@ class BtServices(val btHandler : Handler, val activity: Activity){
     private var acceptThread : AcceptThread? = null
     private val bluetoothAdapter : BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     private val uuid = UUID.fromString("5768b4a8-f0ec-42f8-992d-253e1bde669c")
+    private var shouldListenOnDisconnect = false
 
     fun isConnected() : Boolean{
         return connectedThread != null
@@ -97,6 +100,14 @@ class BtServices(val btHandler : Handler, val activity: Activity){
         activity.runOnUiThread{
             Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    fun isListeningOnDisconnect() : Boolean{
+        return shouldListenOnDisconnect
+    }
+
+    fun setListeningOnDisconnect(shouldListen : Boolean){
+        shouldListenOnDisconnect = shouldListen
     }
 
     private inner class ConnectThread(device: BluetoothDevice) : Thread() {
@@ -238,6 +249,53 @@ class BtServices(val btHandler : Handler, val activity: Activity){
                 mmServerSocket?.close()
             } catch (e: IOException) {
                 Log.e(TAG, "Could not close the connect socket", e)
+            }
+        }
+    }
+
+    // Broadcast receiver
+    override fun onReceive(p0: Context?, intent: Intent) {
+        //TODO check these state values! this is just sample code
+        val action = intent.action
+        when(action){
+            BluetoothAdapter.ACTION_STATE_CHANGED -> {
+                val currentState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF)
+                val previousState = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, BluetoothAdapter.STATE_OFF)
+
+                when(currentState){
+                    BluetoothAdapter.STATE_OFF -> Log.d(TAG, "off")
+                    BluetoothAdapter.STATE_ON -> Log.d(TAG, "on")
+                    BluetoothAdapter.STATE_TURNING_OFF -> Log.d(TAG, "turning off")
+                    BluetoothAdapter.STATE_TURNING_ON -> Log.d(TAG, "turning on")
+                }
+            }
+            BluetoothDevice.ACTION_FOUND -> {
+                if(btCallbacks == null)
+                    return
+                val device: BluetoothDevice? =
+                    intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                btCallbacks.onDeviceFound(device!!)
+            }
+            BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                if(btCallbacks == null)
+                    return
+                btCallbacks.onConnectStateChanged(true)
+            }
+            BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
+                if(btCallbacks == null)
+                    return
+                btCallbacks.onConnectStateChanged(false)
+                if(shouldListenOnDisconnect)
+                    acceptConnections()
+            }
+            BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                if(btCallbacks == null)
+                    return
+                val bondState : Int = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
+                when(bondState){
+                    BluetoothDevice.BOND_BONDED -> btCallbacks.onPairedStateChanged(true)
+                    BluetoothDevice.BOND_NONE -> btCallbacks.onPairedStateChanged(false)
+                }
             }
         }
     }

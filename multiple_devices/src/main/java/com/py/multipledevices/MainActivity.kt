@@ -24,9 +24,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    val btServices = BtServices(handler, this)
-    val adapter = BondedDevicesAdapter(ArrayList(), btServices)
-    val btCallbacks = object: BtCallbacks{
+    val btCallbacks : BtCallbacks = object: BtCallbacks{
+        override fun onDeviceFound(device: BluetoothDevice) {
+            adapter.add(device)
+        }
+
         override fun onConnectStateChanged(connected: Boolean) {
             if(connected)
                 showToast("Bluetooth connected!!")
@@ -41,7 +43,8 @@ class MainActivity : AppCompatActivity() {
                 showToast("Bluetooth not paired..")
         }
     }
-    val btBroadcastReceiver = BtBroadcastReceiver(adapter, btCallbacks)
+    val btServices = BtServices(handler, this, btCallbacks)
+    val adapter = BondedDevicesAdapter(ArrayList(), btServices)
     var vibrator : Vibrator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         configureReceiver()
         bluetooth_bonded_devices.adapter = adapter
         bluetooth_bonded_devices.layoutManager = LinearLayoutManager(this)
-
+        btServices.setListeningOnDisconnect(true)
         bluetooth_enable_button.setOnClickListener {
             btServices.enable()
             enableDiscovery()
@@ -86,7 +89,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(btBroadcastReceiver)
+        unregisterReceiver(btServices)
     }
 
     private fun getDevices(){
@@ -100,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-        registerReceiver(btBroadcastReceiver, filter)
+        registerReceiver(btServices, filter)
     }
 
     private fun enableDiscovery(){
