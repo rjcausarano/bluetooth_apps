@@ -1,4 +1,4 @@
-package com.py.multipledevices
+package com.py.bluetooth_connection
 
 import android.Manifest
 import android.app.Activity
@@ -24,6 +24,10 @@ import java.util.*
 class BtServices(val btHandler : Handler, val activity: Activity, val btCallbacks: BtCallbacks? = null) : BroadcastReceiver(){
     companion object{
         private val TAG = BtServices::class.simpleName
+        private val NAME_SECURE = "BTServices Secure"
+        private val NAME_INSECURE = "BTServices Insecure"
+        private val UUID_SECURE = UUID.fromString("5768b4a8-f0ec-42f8-992d-253e1bde669c")
+        private val UUID_INSECURE = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66")
         val REQUEST_ENABLE_BT = 980
         val REQUEST_LOCATION_PERMISSION = 283
     }
@@ -31,8 +35,8 @@ class BtServices(val btHandler : Handler, val activity: Activity, val btCallback
     private var connectThread : ConnectThread? = null
     private var acceptThread : AcceptThread? = null
     private val bluetoothAdapter : BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-    private val uuid = UUID.fromString("5768b4a8-f0ec-42f8-992d-253e1bde669c")
     private var shouldListenOnDisconnect = false
+    private var secureConnection = true
 
     fun isConnected() : Boolean{
         return connectedThread != null
@@ -76,7 +80,9 @@ class BtServices(val btHandler : Handler, val activity: Activity, val btCallback
             throw Exception("Doesn't support bluetooth")
         if (!bluetoothAdapter.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+            activity.startActivityForResult(enableBtIntent,
+                REQUEST_ENABLE_BT
+            )
         }
     }
 
@@ -110,10 +116,21 @@ class BtServices(val btHandler : Handler, val activity: Activity, val btCallback
         shouldListenOnDisconnect = shouldListen
     }
 
+    fun isSecureConnection() : Boolean{
+        return secureConnection
+    }
+
+    fun setSecureConnection(secureConnection : Boolean){
+        this.secureConnection = secureConnection
+    }
+
     private inner class ConnectThread(device: BluetoothDevice) : Thread() {
 
         private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
-            device.createInsecureRfcommSocketToServiceRecord(uuid)
+            if(secureConnection)
+                device.createRfcommSocketToServiceRecord(UUID_SECURE)
+            else
+                device.createInsecureRfcommSocketToServiceRecord(UUID_INSECURE)
         }
 
         override fun run() {
@@ -219,7 +236,10 @@ class BtServices(val btHandler : Handler, val activity: Activity, val btCallback
     private inner class AcceptThread : Thread() {
 
         private val mmServerSocket: BluetoothServerSocket? by lazy(LazyThreadSafetyMode.NONE) {
-            bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(TAG, uuid)
+            if(secureConnection)
+                bluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME_SECURE, UUID_SECURE)
+            else
+                bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(NAME_INSECURE, UUID_INSECURE)
         }
 
         override fun run() {

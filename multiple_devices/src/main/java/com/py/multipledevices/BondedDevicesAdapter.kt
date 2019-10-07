@@ -8,7 +8,7 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.bluetooth_device_name.view.*
 
-class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btServices: BtServices) : RecyclerView.Adapter<BtViewHolder>(){
+class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btServices: com.py.bluetooth_connection.BtServices) : RecyclerView.Adapter<BtViewHolder>(){
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BtViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.bluetooth_device_name, parent, false) as LinearLayout
 

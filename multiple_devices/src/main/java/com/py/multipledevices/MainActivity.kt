@@ -17,14 +17,15 @@ class MainActivity : AppCompatActivity() {
     val handler = object:Handler(){
         override fun handleMessage(msg: Message) {
             when(msg.what){
-                Constants.MESSAGE_READ -> {
+                com.py.bluetooth_connection.Constants.MESSAGE_READ -> {
                     val txt = String(msg.obj as ByteArray, 0, msg.arg1)
                     showToast(txt)
                 }
             }
         }
     }
-    val btCallbacks : BtCallbacks = object: BtCallbacks{
+    val btCallbacks : com.py.bluetooth_connection.BtCallbacks = object:
+        com.py.bluetooth_connection.BtCallbacks {
         override fun onDeviceFound(device: BluetoothDevice) {
             adapter.add(device)
         }
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity() {
                 showToast("Bluetooth not paired..")
         }
     }
-    val btServices = BtServices(handler, this, btCallbacks)
+    val btServices = com.py.bluetooth_connection.BtServices(handler, this, btCallbacks)
     val adapter = BondedDevicesAdapter(ArrayList(), btServices)
     var vibrator : Vibrator? = null
 
@@ -74,12 +75,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when(requestCode){
-            BtServices.REQUEST_ENABLE_BT -> {
+            com.py.bluetooth_connection.BtServices.REQUEST_ENABLE_BT -> {
                 if(resultCode == Activity.RESULT_OK){
                     showToast("Bluetooth Enabled!")
                 }
             }
-            BtServices.REQUEST_LOCATION_PERMISSION -> {
+            com.py.bluetooth_connection.BtServices.REQUEST_LOCATION_PERMISSION -> {
                 if(resultCode == Activity.RESULT_OK)
                     btServices.scanDevices()
             }

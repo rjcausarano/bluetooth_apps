@@ -1,4 +1,4 @@
-package com.py.multipledevices
+package com.py.bluetooth_connection
 
 import android.bluetooth.BluetoothDevice
 
