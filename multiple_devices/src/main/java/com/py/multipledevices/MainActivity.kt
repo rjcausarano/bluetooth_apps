@@ -55,7 +55,8 @@ class MainActivity : AppCompatActivity() {
         configureReceiver()
         bluetooth_bonded_devices.adapter = adapter
         bluetooth_bonded_devices.layoutManager = LinearLayoutManager(this)
-        btServices.setListeningOnDisconnect(true)
+        btServices.setListeningOnDisconnect(false)
+        btServices.setSecureConnection(false)
         bluetooth_enable_button.setOnClickListener {
             btServices.enable()
             enableDiscovery()

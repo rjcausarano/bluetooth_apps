@@ -30,7 +30,7 @@ class BondedDevicesAdapter(val btDevices : ArrayList<BluetoothDevice>, val btSer
             }
         }
         holder.view.setOnClickListener {
-            btServices.connect(device)
+            btServices.connect(device, device.uuids.get(0).uuid)
         }
     }
 

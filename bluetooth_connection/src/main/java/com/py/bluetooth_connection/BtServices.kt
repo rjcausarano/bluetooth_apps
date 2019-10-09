@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.charset.StandardCharsets
 import java.util.*
 
 class BtServices(val btHandler : Handler, val activity: Activity, val btCallbacks: BtCallbacks? = null) : BroadcastReceiver(){
@@ -51,10 +52,10 @@ class BtServices(val btHandler : Handler, val activity: Activity, val btCallback
         acceptThread = null
     }
 
-    fun connect(btDevice: BluetoothDevice){
+    fun connect(btDevice: BluetoothDevice, uuid: UUID){
         //TODO check for nullness and end thread if already running before running below line
         cleanThreads()
-        connectThread = ConnectThread(btDevice)
+        connectThread = ConnectThread(btDevice, uuid)
         connectThread!!.start()
     }
 
@@ -66,7 +67,7 @@ class BtServices(val btHandler : Handler, val activity: Activity, val btCallback
 
     fun write(msg : String){
         if(isConnected()){
-            connectedThread?.write(msg.toByteArray())
+            connectedThread?.write(msg.toByteArray(StandardCharsets.US_ASCII))
         }
     }
 
@@ -124,13 +125,12 @@ class BtServices(val btHandler : Handler, val activity: Activity, val btCallback
         this.secureConnection = secureConnection
     }
 
-    private inner class ConnectThread(device: BluetoothDevice) : Thread() {
-
+    private inner class ConnectThread(device: BluetoothDevice, uuid : UUID) : Thread() {
         private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
             if(secureConnection)
-                device.createRfcommSocketToServiceRecord(UUID_SECURE)
+                device.createRfcommSocketToServiceRecord(uuid)
             else
-                device.createInsecureRfcommSocketToServiceRecord(UUID_INSECURE)
+                device.createInsecureRfcommSocketToServiceRecord(uuid)
         }
 
         override fun run() {
